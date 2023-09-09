@@ -1,0 +1,11 @@
+scipy
+torch>=2.0.1
+sentencepiece
+protobuf
+accelerate
+bitsandbytes
+transformers
+cryptography
+optimum
+--extra-index-url https://huggingface.github.io/autogptq-index/whl/cu118/
+auto-gptq

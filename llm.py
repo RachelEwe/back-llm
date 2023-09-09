@@ -1,7 +1,8 @@
+import os
 import random
 import torch
 from typing import Tuple, Any, Dict
-from transformers import LlamaForCausalLM, LlamaTokenizer, pipeline, set_seed
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, set_seed
 
 
 class LLM:
@@ -10,21 +11,21 @@ class LLM:
     def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
         if LLM.__instance is None :
             LLM.__instance = super(LLM, cls).__new__(cls, *args, **kwargs)
-            cls._model_name_or_path = "TehVenom/Pygmalion-7b-Merged-Safetensors"
-
+            cls._model_name_or_path = "/home/dev/models/" + os.getenv("MODEL_NAME")
             seed = random.randint(0, 2**32-1)
             set_seed(seed)
 
-            cls._tokenizer = LlamaTokenizer.from_pretrained(
+            cls._tokenizer = AutoTokenizer.from_pretrained(
                 cls._model_name_or_path,
-                clean_up_tokenization_spaces=True
+                clean_up_tokenization_spaces=True,
+                legacy=True
             )
-            cls._model = LlamaForCausalLM.from_pretrained(
+            cls._model = AutoModelForCausalLM.from_pretrained(
                 cls._model_name_or_path,device_map='auto',
                 torch_dtype=torch.float16,
-                use_safetensors=True,
                 trust_remote_code=False
             )
+            print(cls._model.config)
         return LLM.__instance
 
     def model_name(self) -> str:
@@ -34,17 +35,16 @@ class LLM:
         tokens = self._tokenizer.encode(text)
         return len(tokens)
 
-    def create_completion(self, prompt: str, max_new_tokens: int) -> str:
+    def create_completion(self, **kwargs) -> str:
+        prompt = kwargs["prompt"]
+        kwargs.pop("prompt")
         length = len(prompt)
         pipe = pipeline(
             "text-generation",
             model=self._model,
             tokenizer=self._tokenizer,
             do_sample=True,
-            max_new_tokens=max_new_tokens,
-            temperature=0.7,
-            top_p=0.95,
-            repetition_penalty=1.15
+            **kwargs
         )
         result = pipe(prompt)[0]['generated_text']
         return result[length:]

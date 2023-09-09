@@ -30,11 +30,10 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
 
-            prompt = body['prompt']
             llm = LLM()
             response = json.dumps({
                 'results': [{
-                    'text': llm.create_completion(prompt, 50)
+                    'text': llm.create_completion(**body)
                 }]
             })
             self.wfile.write(response.encode('utf-8'))
@@ -44,12 +43,12 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             key = os.getenv("PSK")
             key = key.encode()
-            prompt = aes.str_decrypt(body['prompt'], key)
+            body['prompt'] = aes.str_decrypt(body['prompt'], key)
 
             llm = LLM()
             response = json.dumps({
                 'results': [{
-                    'text':  aes.str_encrypt(llm.create_completion(prompt, 50), key)
+                    'text':  aes.str_encrypt(llm.create_completion(**body), key)
                 }]
             })
             self.wfile.write(response.encode('utf-8'))
