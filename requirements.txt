@@ -1,5 +1,6 @@
+datasets
 scipy
-torch==2.0.1
+torch
 sentencepiece
 protobuf
 accelerate
