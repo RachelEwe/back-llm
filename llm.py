@@ -3,6 +3,7 @@ import random
 import torch
 from typing import Tuple, Any, Dict
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, set_seed
+from auto_gptq import exllama_set_max_input_length
 
 
 class LLM:
@@ -25,6 +26,8 @@ class LLM:
                 torch_dtype=torch.float16,
                 trust_remote_code=False
             )
+            if cls._model.config.quantization_config.use_exllama is True:
+                cls._model = exllama_set_max_input_length(cls._model, max_input_length=8192)
             print(cls._model.config)
         return LLM.__instance
 
@@ -48,4 +51,5 @@ class LLM:
         )
         result = pipe(prompt)[0]['generated_text']
         return result[length:]
+
 
